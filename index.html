@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CID Checker Servers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Fira Code', monospace;
+        }
+        body {
+            background: linear-gradient(145deg, #001a00 0%, #002200 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .header {
+            background: rgba(0, 30, 0, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid #00aa30;
+            border-radius: 42px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 255, 100, 0.15);
+            text-align: center;
+        }
+        .title h1 {
+            color: #b7ffb7;
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px #00e600;
+        }
+        .sub-info {
+            color: #70ff70;
+            background: #003300;
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            border: 1px solid #22dd22;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+        .control-panel {
+            background: #002a00;
+            border-radius: 40px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #22aa22;
+            box-shadow: 0 5px 0 #001a00;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .control-panel button {
+            background: #003d00;
+            border: 1px solid #33aa33;
+            color: #b3ffb3;
+            padding: 0.8rem 2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            min-width: 180px;
+        }
+        .control-panel button:hover:not(:disabled) {
+            background: #115511;
+            border-color: #55ff55;
+            color: white;
+            box-shadow: 0 0 12px #33aa33;
+        }
+        .control-panel button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .stats-card {
+            background: #002a00;
+            border-radius: 40px;
+            padding: 1.5rem 2rem;
+            border: 1px solid #33aa33;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .stat-item {
+            color: #b3ffb3;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .stat-item strong {
+            color: white;
+            background: #006600;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            margin-left: 0.6rem;
+            font-size: 1.8rem;
+        }
+        .progress-section {
+            margin: 1.5rem 0;
+        }
+        .progress-bar {
+            height: 12px;
+            background: #113311;
+            border-radius: 20px;
+            width: 100%;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #44dd44, #bbffbb);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 20px;
+        }
+        .percent {
+            font-size: 1.2rem;
+            color: #aaffaa;
+        }
+        .result-message {
+            background: #003300;
+            border-radius: 40px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px dashed #33aa33;
+            color: #ccffcc;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .footer-notes {
+            margin-top: 2rem;
+            color: #55aa55;
+            text-align: center;
+            border-top: 1px dashed #226622;
+            padding-top: 1.5rem;
+            font-size: 0.85rem;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #33aa33;
+            border-top-color: #ccffcc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title">
+            <h1>🍏 CID Checker Servers</h1>
+        </div>
+        <div class="sub-info">
+            📄 general.txt
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <button id="checkBtn" disabled>🔍 проверить</button>
+        <button id="copyAllBtn" disabled>📋 скопировать все</button>
+    </div>
+
+    <div class="stats-card">
+        <div class="stat-item">
+            📦 загружено: <strong id="totalCount">0</strong>
+        </div>
+        <div class="stat-item">
+            ✅ рабочих: <strong id="workingCount">0</strong>
+        </div>
+        <div class="progress-section">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            <div class="percent" id="progressPercent">0%</div>
+        </div>
+    </div>
+
+    <div class="result-message" id="resultMessage">
+        ⬇️ загрузка подписки...
+    </div>
+
+    <div class="footer-notes">
+        Создан сайт для того если создатель долго не будет обновлять свою подписку и вы знали какие сейчас сервера работают.
+    </div>
+</div>
+
+<script>
+    const SUBSCRIPTION_URL = "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt";
+
+    const checkBtn = document.getElementById('checkBtn');
+    const copyAllBtn = document.getElementById('copyAllBtn');
+    const totalSpan = document.getElementById('totalCount');
+    const workingSpan = document.getElementById('workingCount');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
+    const resultMessage = document.getElementById('resultMessage');
+
+    let allServers = [];
+    let workingServers = [];
+    let checkedCount = 0;
+    let isChecking = false;
+
+    function parseVlessLinks(text) {
+        const lines = text.split('\n');
+        const vlessList = [];
+        const vlessRegex = /^vless:\/\/([^@]+)@([^:]+):(\d+)(\?[^#]+)?#(.+)?/;
+        for (let line of lines) {
+            line = line.trim();
+            if (!line.startsWith('vless://')) continue;
+            try {
+                const match = line.match(vlessRegex);
+                if (!match) continue;
+                const [_, uuidHost, address, port, params, fullName] = match;
+                let remark = fullName ? decodeURIComponent(fullName).trim() : 'Без имени';
+                vlessList.push({
+                    raw: line,
+                    address: address,
+                    port: parseInt(port, 10),
+                    name: remark,
+                    protocol: 'vless'
+                });
+            } catch (e) {}
+        }
+        return vlessList;
+    }
+
+    function updateUI() {
+        totalSpan.textContent = allServers.length;
+        workingSpan.textContent = workingServers.length;
+
+        const progressTotal = allServers.length;
+        const percent = progressTotal ? Math.round((checkedCount / progressTotal) * 100) : 0;
+        progressPercent.textContent = percent + '%';
+        progressFill.style.width = percent + '%';
+
+        if (allServers.length === 0) {
+            resultMessage.innerHTML = '⬆️ подписка не загружена';
+        } else if (isChecking) {
+            resultMessage.innerHTML = '<span class="loading-spinner"></span> идёт проверка...';
+        } else if (checkedCount === allServers.length) {
+            if (workingServers.length === 0) {
+                resultMessage.innerHTML = '😞 ни одного рабочего сервера не найдено';
+            } else {
+                resultMessage.innerHTML = `✅ найдено <strong>${workingServers.length}</strong> рабочих серверов. Нажмите «скопировать все», чтобы получить ссылки.`;
+            }
+        } else {
+            resultMessage.innerHTML = '⏳ нажмите «проверить» для запуска';
+        }
+
+        checkBtn.disabled = isChecking || allServers.length === 0;
+        copyAllBtn.disabled = workingServers.length === 0;
+    }
+
+    async function checkDNS(domain) {
+        if (!domain) return { success: false };
+        try {
+            const cleanDomain = domain.replace(/[^a-zA-Z0-9.-]/g, '');
+            const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(cleanDomain)}&type=A`, {
+                headers: { 'Accept': 'application/dns-json' },
+                method: 'GET',
+                mode: 'cors'
+            });
+            if (!response.ok) throw new Error();
+            const data = await response.json();
+            const hasIP = data.Answer && data.Answer.some(a => a.data && a.data.match(/^\d+\.\d+\.\d+\.\d+$/));
+            return { success: hasIP };
+        } catch {
+            return { success: false };
+        }
+    }
+
+    function checkWebSocket(domain, port) {
+        return new Promise((resolve) => {
+            if (!domain || !port) resolve({ success: false });
+            const protocol = (port === 443 || port === 8443) ? 'wss' : 'ws';
+            const url = `${protocol}://${domain}:${port}`;
+            const timeout = setTimeout(() => {
+                ws.close();
+                resolve({ success: false });
+            }, 3000);
+            const ws = new WebSocket(url);
+            ws.onopen = () => {
+                clearTimeout(timeout);
+                ws.close();
+                resolve({ success: true });
+            };
+            ws.onerror = () => {
+                clearTimeout(timeout);
+                resolve({ success: false });
+            };
+        });
+    }
+
+    async function checkServerHealth(server) {
+        const [dns, ws] = await Promise.allSettled([
+            checkDNS(server.address),
+            checkWebSocket(server.address, server.port)
+        ]);
+        const dnsOk = dns.status === 'fulfilled' && dns.value.success;
+        const wsOk = ws.status === 'fulfilled' && ws.value.success;
+        return { ...server, healthScore: wsOk ? 3 : (dnsOk ? 2 : 0) };
+    }
+
+    async function startChecking() {
+        if (isChecking) return;
+        isChecking = true;
+        workingServers = [];
+        checkedCount = 0;
+        updateUI();
+
+        const promises = allServers.map(async (server) => {
+            const health = await checkServerHealth(server);
+            return health;
+        });
+
+        for (let i = 0; i < promises.length; i++) {
+            promises[i].then(health => {
+                checkedCount++;
+                if (health.healthScore >= 2) {
+                    workingServers.push(health);
+                }
+                updateUI();
+            });
+        }
+
+        await Promise.allSettled(promises);
+        isChecking = false;
+        updateUI();
+    }
+
+    async function loadSubscription() {
+        try {
+            resultMessage.innerHTML = '<span class="loading-spinner"></span> загрузка подписки...';
+            const response = await fetch(SUBSCRIPTION_URL);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const text = await response.text();
+
+            allServers = parseVlessLinks(text);
+            if (allServers.length === 0) throw new Error('Нет VLESS-ссылок');
+
+            updateUI();
+        } catch (e) {
+            resultMessage.innerHTML = '❌ ошибка загрузки подписки';
+            console.error(e);
+        }
+    }
+
+    function copyAllWorking() {
+        if (workingServers.length === 0) return;
+        const allLinks = workingServers.map(s => s.raw).join('\n');
+        navigator.clipboard.writeText(allLinks).then(() => {
+            alert(`Скопировано ${workingServers.length} ссылок`);
+        }).catch(() => alert('Не удалось скопировать'));
+    }
+
+    checkBtn.addEventListener('click', startChecking);
+    copyAllBtn.addEventListener('click', copyAllWorking);
+
+    window.addEventListener('load', loadSubscription);
+</script>
+</body>
+</html>
